@@ -1,25 +1,134 @@
+
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8">
-  <title>ToDo</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>教科書レンタル管理システム</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .status-available { background-color: #def7ec; color: #03543f; }
+        .status-rented { background-color: #fde8e8; color: #9b1c1c; }
+    </style>
 </head>
-<body>
-  <input id="task" placeholder="やること">
-  <button onclick="addTask()">追加</button>
-  <ul id="list"></ul>
+<body class="bg-gray-50 p-4 md:p-10">
 
-  <script>
-    function addTask() {
-      const text = document.getElementById("task").value;
-      if (!text) return;
+    <div class="max-w-4xl mx-auto bg-white p-6 rounded-xl shadow-lg">
+        <h1 class="text-2xl font-bold mb-6 text-gray-800">📚 教科書レンタル管理</h1>
 
-      const li = document.createElement("li");
-      li.textContent = text;
-      document.getElementById("list").appendChild(li);
+        <div class="mb-6">
+            <input type="text" id="searchInput" placeholder="教科書名・著者で検索..." 
+                class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+        </div>
 
-      document.getElementById("task").value = "";
-    }
-  </script>
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="border-b-2 border-gray-100 text-gray-600">
+                        <th class="p-3">タイトル</th>
+                        <th class="p-3">著者</th>
+                        <th class="p-3">ステータス</th>
+                        <th class="p-3">アクション</th>
+                    </tr>
+                </thead>
+                <tbody id="bookList">
+                    </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div id="modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
+        <div class="bg-white p-6 rounded-lg max-w-sm w-full">
+            <h2 id="modalTitle" class="text-xl font-bold mb-4">予約シミュレーション</h2>
+            <p class="text-sm text-gray-600 mb-4">本日より14日間レンタルする場合のシミュレーションです。</p>
+            <div class="bg-blue-50 p-4 rounded-md mb-4">
+                <p class="text-sm">返却予定日: <span id="returnDate" class="font-bold"></span></p>
+            </div>
+            <div class="flex justify-end gap-2">
+                <button onclick="closeModal()" class="px-4 py-2 text-gray-500">キャンセル</button>
+                <button onclick="confirmRental()" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">確定する</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // サンプルデータ
+        const books = [
+            { id: 1, title: "経済学基礎 I", author: "佐藤 健二", status: "available" },
+            { id: 2, title: "JavaScript入門", author: "田中 太郎", status: "rented" },
+            { id: 3, title: "線形代数と幾何", author: "鈴木 一郎", status: "available" },
+            { id: 4, title: "モダンWebデザイン", author: "山田 花子", status: "available" },
+            { id: 5, title: "マクロ経済学", author: "佐藤 健二", status: "rented" }
+        ];
+
+        let selectedBookId = null;
+
+        // リスト描画
+        function renderBooks(filter = "") {
+            const list = document.getElementById('bookList');
+            list.innerHTML = "";
+
+            const filtered = books.filter(b => 
+                b.title.includes(filter) || b.author.includes(filter)
+            );
+
+            filtered.forEach(book => {
+                const isAvail = book.status === 'available';
+                const row = document.createElement('tr');
+                row.className = "border-b border-gray-50 hover:bg-gray-50 transition";
+                row.innerHTML = `
+                    <td class="p-3 font-medium">${book.title}</td>
+                    <td class="p-3 text-gray-600">${book.author}</td>
+                    <td class="p-3">
+                        <span class="px-2 py-1 rounded-full text-xs font-bold ${isAvail ? 'status-available' : 'status-rented'}">
+                            ${isAvail ? '● 貸し出し可能' : '■ レンタル中'}
+                        </span>
+                    </td>
+                    <td class="p-3">
+                        <button onclick="openModal(${book.id})" 
+                            ${!isAvail ? 'disabled' : ''}
+                            class="px-3 py-1 rounded text-sm transition ${isAvail ? 'bg-blue-100 text-blue-700 hover:bg-blue-200' : 'bg-gray-100 text-gray-400 cursor-not-allowed'}">
+                            予約する
+                        </button>
+                    </td>
+                `;
+                list.appendChild(row);
+            });
+        }
+
+        // 検索イベント
+        document.getElementById('searchInput').addEventListener('input', (e) => {
+            renderBooks(e.target.value);
+        });
+
+        // モーダル操作
+        function openModal(id) {
+            selectedBookId = id;
+            const book = books.find(b => b.id === id);
+            document.getElementById('modalTitle').innerText = `${book.title} の予約`;
+            
+            // 返却予定日の計算（14日後）
+            const date = new Date();
+            date.setDate(date.getDate() + 14);
+            document.getElementById('returnDate').innerText = date.toLocaleDateString('ja-JP');
+            
+            document.getElementById('modal').classList.remove('hidden');
+        }
+
+        function closeModal() {
+            document.getElementById('modal').classList.add('hidden');
+        }
+
+        function confirmRental() {
+            const book = books.find(b => b.id === selectedBookId);
+            book.status = 'rented';
+            alert(`${book.title} の予約が完了しました。`);
+            closeModal();
+            renderBooks();
+        }
+
+        // 初期化
+        renderBooks();
+    </script>
 </body>
 </html>
