@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>ToDo</title>
+</head>
+<body>
+  <input id="task" placeholder="やること">
+  <button onclick="addTask()">追加</button>
+  <ul id="list"></ul>
+
+  <script>
+    function addTask() {
+      const text = document.getElementById("task").value;
+      if (!text) return;
+
+      const li = document.createElement("li");
+      li.textContent = text;
+      document.getElementById("list").appendChild(li);
+
+      document.getElementById("task").value = "";
+    }
+  </script>
+</body>
+</html>
