@@ -3,12 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>高知県立大 文化学部 教科書シェア</title>
+    <title>高知県立大 文化学部 教科書シェア v4</title>
     <style>
         :root {
-            --primary-color: #2c5e4f; /* 県立大をイメージしたグリーン */
-            --accent-color: #e67e22;
-            --bg-color: #f4f7f6;
+            /* 専門課程を「緑」に設定 */
+            --special-color: #2c5e4f; 
+            --primary-color: #2c5e4f;
+            --common-color: #3498db;
+            --license-color: #e67e22;
+            --bg-color: #f0f4f3;
         }
 
         body {
@@ -21,180 +24,244 @@
 
         header {
             text-align: center;
-            margin-bottom: 30px;
+            margin-bottom: 20px;
             border-bottom: 3px solid var(--primary-color);
-            padding-bottom: 10px;
+            padding-bottom: 15px;
         }
 
-        .search-container {
-            max-width: 600px;
-            margin: 0 auto 20px;
+        /* 検索・タブ固定エリア */
+        .sticky-controls {
+            position: sticky;
+            top: 0;
+            background: var(--bg-color);
+            padding: 15px 0;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            align-items: center;
         }
+
+        .search-container { width: 100%; max-width: 600px; }
 
         input[type="text"] {
             width: 100%;
-            padding: 12px;
+            padding: 14px 25px;
             border: 2px solid #ddd;
-            border-radius: 25px;
+            border-radius: 30px;
             font-size: 16px;
             box-sizing: border-box;
             outline: none;
-            transition: border-color 0.3s;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         }
 
-        input[type="text"]:focus {
-            border-color: var(--primary-color);
+        .category-tabs { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
+
+        .tab-btn {
+            padding: 10px 18px;
+            border: none;
+            border-radius: 20px;
+            background: white;
+            color: #555;
+            cursor: pointer;
+            font-weight: bold;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            transition: 0.3s;
         }
 
+        .tab-btn.active { background: var(--primary-color); color: white; }
+
+        /* カードデザイン */
         .book-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: 20px;
-            max-width: 1000px;
-            margin: 0 auto;
+            gap: 25px;
+            max-width: 1200px;
+            margin: 20px auto;
         }
 
         .book-card {
             background: white;
-            border-radius: 10px;
+            border-radius: 15px;
             padding: 20px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            display: flex;
+            flex-direction: column;
+            border-top: 8px solid #ddd;
             transition: transform 0.2s;
         }
+        .book-card:hover { transform: translateY(-5px); }
+        
+        /* 専門課程を緑にする */
+        .book-card.special { border-top-color: var(--special-color); }
+        .book-card.common { border-top-color: var(--common-color); }
+        .book-card.license { border-top-color: var(--license-color); }
 
-        .book-card:hover {
-            transform: translateY(-5px);
+        .tag-row { display: flex; gap: 6px; margin-bottom: 12px; }
+        .type-tag { font-size: 11px; padding: 3px 8px; border-radius: 4px; color: white; font-weight: bold; }
+        .tag-special { background: var(--special-color); }
+        .tag-common { background: var(--common-color); }
+        .tag-license { background: var(--license-color); }
+        .course-tag { font-size: 12px; background: #f0f0f0; padding: 3px 8px; border-radius: 4px; color: #666; }
+
+        .book-card h3 { 
+            margin: 10px 0; font-size: 1.15em; line-height: 1.4; height: 2.8em; 
+            overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; 
         }
 
-        .course-tag {
-            font-size: 12px;
-            background: #eee;
-            padding: 2px 8px;
-            border-radius: 4px;
-            color: #666;
-        }
+        .author { font-size: 13px; color: #888; margin-bottom: 15px; }
 
         .status-badge {
-            display: inline-block;
-            margin-top: 10px;
-            padding: 5px 12px;
-            border-radius: 15px;
+            margin-bottom: 15px;
+            padding: 6px;
+            border-radius: 10px;
+            font-size: 13px;
+            text-align: center;
             font-weight: bold;
-            font-size: 14px;
         }
-
-        .status-available { background: #d4edda; color: #155724; }
-        .status-rented { background: #f8d7da; color: #721c24; }
+        .status-available { background: #e8f5e9; color: #2e7d32; }
+        .status-rented { background: #ffebee; color: #c62828; }
 
         .location-select {
-            margin-top: 15px;
-            width: 100%;
-            padding: 8px;
-            border-radius: 5px;
+            width: 100%; padding: 10px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 6px;
         }
 
         .rent-btn {
-            display: block;
-            width: 100%;
-            margin-top: 15px;
-            padding: 10px;
-            border: none;
-            border-radius: 5px;
-            background: var(--primary-color);
-            color: white;
-            cursor: pointer;
-            font-weight: bold;
-            transition: opacity 0.3s;
+            width: 100%; padding: 12px; border: none; border-radius: 8px;
+            background: var(--primary-color); color: white; font-weight: bold;
+            cursor: pointer; transition: 0.3s;
         }
+        .rent-btn:disabled { background: #bdc3c7; cursor: not-allowed; }
 
-        .rent-btn:disabled {
-            background: #ccc;
-            cursor: not-allowed;
-        }
-
-        .rent-btn:hover:not(:disabled) {
-            opacity: 0.8;
+        @media (max-width: 600px) {
+            .book-grid { grid-template-columns: 1fr; }
         }
     </style>
 </head>
 <body>
 
 <header>
-    <h1>永国寺キャンパス 教科書シェア</h1>
-    <p>文化学部生のためのレンタルマーケット</p>
+    <h1>高知県立大学 文化学部 教科書シェア</h1>
+    <p>永国寺キャンパス限定：先輩から後輩へ学びのバトン</p>
 </header>
 
-<div class="search-container">
-    <input type="text" id="searchInput" placeholder="本の商品名、著者、または教科名で検索...">
+<div class="sticky-controls">
+    <div class="search-container">
+        <input type="text" id="searchInput" placeholder="タイトル・講義名・著者名で検索...">
+    </div>
+    <div class="category-tabs">
+        <button class="tab-btn active" onclick="filterCategory('all', this)">全教科</button>
+        <button class="tab-btn" onclick="filterCategory('special', this)">専門課程</button>
+        <button class="tab-btn" onclick="filterCategory('common', this)">共通教育</button>
+        <button class="tab-btn" onclick="filterCategory('license', this)">資格課程</button>
+    </div>
 </div>
 
-<div class="book-grid" id="bookGrid">
-    </div>
+<div class="book-grid" id="bookGrid"></div>
 
 <script>
-    // 文化学部の教科書データ例
+    const locations = ["図書館前カウンター", "学生ラウンジ(1F)", "食堂(エヴァンス)入口", "正面玄関ベンチ", "共通講義棟入り口"];
+
     const books = [
-        { id: 1, title: "文化人類学への招待", course: "文化人類学概論", author: "佐藤 健二", status: "available" },
-        { id: 2, title: "高知の歴史と風土", course: "地域文化論", author: "高橋 誠", status: "rented" },
-        { id: 3, title: "社会調査の基礎", course: "社会調査法", author: "田中 芳子", status: "available" },
-        { id: 4, title: "現代言語学入門", course: "言語コミュニケーション論", author: "Smith John", status: "available" },
-        { id: 5, title: "心理学：心の仕組み", course: "心理学概論", author: "中村 弘", status: "rented" },
-        { id: 6, title: "観光文化論講義", course: "観光文化論", author: "伊藤 恵", status: "available" },
-        { id: 7, title: "多文化共生社会の課題", course: "多文化共生論", author: "岡田 康志", status: "available" },
-        { id: 8, title: "メディアと現代社会", course: "情報メディア論", author: "佐々木 茂", status: "available" },
-        { id: 9, title: "日本文学史（近代編）", course: "日本文学概論", author: "小林 文代", status: "rented" },
-        { id: 10, title: "比較文化論入門", course: "比較文化論", author: "山田 太郎", status: "available" },
-        { id: 11, title: "フィールドワークの技法", course: "文化フィールドワーク演習", author: "中島 健", status: "available" },
-        { id: 12, title: "高知県の伝統産業", course: "土佐文化論", author: "高知 太郎", status: "available" },
-        { id: 13, title: "異文化コミュニケーション", course: "国際コミュニケーション論", author: "Miller Alice", status: "rented" },
-        { id: 14, title: "表象文化論講義", course: "表象文化概論", author: "藤原 徹", status: "available" },
-        { id: 15, title: "日本語教育学概論", course: "日本語教授法", author: "鈴木 幸子", status: "available" },
-        { id: 16, title: "哲学への道", course: "哲学概論", author: "カント 太郎", status: "available" },
-        { id: 17, title: "家族社会学の現在", course: "家族論", author: "山下 真紀", status: "rented" },
-        { id: 18, title: "デジタル・アーカイブ論", course: "文化情報論", author: "デジタル 博士", status: "available" },
-        { id: 19, title: "民俗学のまなざし", course: "日本民俗学", author: "柳田 浩", status: "available" },
-        { id: 20, title: "芸術文化のマネジメント", course: "文化政策論", author: "芸術 史郎", status: "available" }
+        // 専門課程 (緑)
+        { id: 1, type: "special", course: "文化人類学概論", title: "文化人類学への招待", author: "佐藤 健二", status: "available" },
+        { id: 2, type: "special", course: "地域文化論", title: "高知の歴史と風土：土佐のアイデンティティ", author: "高橋 誠", status: "rented" },
+        { id: 3, type: "special", course: "社会調査法", title: "社会調査の基礎理論と実践", author: "田中 芳子", status: "available" },
+        { id: 4, type: "special", course: "言語学概論", title: "現代言語学入門：言葉の仕組み", author: "Smith John", status: "available" },
+        { id: 5, type: "special", course: "心理学概論", title: "心理学：心と行動の科学", author: "中村 弘", status: "available" },
+        { id: 6, type: "special", course: "観光文化論", title: "現代観光学の基礎知識", author: "伊藤 恵", status: "available" },
+        { id: 7, type: "special", course: "日本文学史", title: "日本文学史（近代編）：漱石から現代へ", author: "小林 文代", status: "rented" },
+        { id: 8, type: "special", course: "比較文化論", title: "越境する文化：グローバル時代の比較論", author: "山田 太郎", status: "available" },
+        { id: 9, type: "special", course: "文化フィールドワーク", title: "歩いて学ぶ土佐の民俗学", author: "中島 健", status: "available" },
+        { id: 10, type: "special", course: "多文化共生論", title: "共生社会の課題と展望", author: "岡田 康志", status: "available" },
+        { id: 11, type: "special", course: "表象文化概論", title: "イメージの解読：視覚文化を読む", author: "藤原 徹", status: "available" },
+        { id: 12, type: "special", course: "家族社会学", title: "変容する家族と社会構造", author: "山下 真紀", status: "available" },
+        { id: 13, type: "special", course: "文化政策論", title: "アートマネジメント：芸術と公共性", author: "芸術 史郎", status: "available" },
+        { id: 14, type: "special", course: "日本民俗学", title: "伝承と民俗の知恵", author: "柳田 浩", status: "available" },
+        { id: 15, type: "special", course: "映像文化論", title: "映画の見方・語り方", author: "シネマ研究会", status: "available" },
+        { id: 16, type: "special", course: "考古学概論", title: "土佐の古墳と古代史", author: "発掘 次郎", status: "available" },
+        { id: 17, type: "special", course: "ジャーナリズム論", title: "ニュースの裏側：メディアの倫理", author: "報道 太郎", status: "available" },
+        { id: 18, type: "special", course: "地域活性化論", title: "限界集落を救う：高知の挑戦", author: "地域 振興", status: "available" },
+        { id: 19, type: "special", course: "食文化論", title: "皿鉢料理の文化学：土佐の食卓", author: "土佐 料理人", status: "available" },
+        { id: 20, type: "special", course: "卒業論文演習", title: "アカデミック・ライティング入門", author: "学術 太郎", status: "available" },
+
+        // 共通教育 (青)
+        { id: 21, type: "common", course: "英語I", title: "Academic English Skills", author: "Robert West", status: "available" },
+        { id: 22, type: "common", course: "情報リテラシー", title: "大学生の情報活用術", author: "情報教育班", status: "available" },
+        { id: 23, type: "common", course: "ドイツ語I", title: "はじめてのドイツ語：文法と会話", author: "Fritz K.", status: "available" },
+        { id: 24, type: "common", course: "中国語I", title: "基礎中国語：発音から日常会話まで", author: "陳 麗", status: "rented" },
+        { id: 25, type: "common", course: "日本国憲法", title: "憲法と私たちの生活", author: "法務 博士", status: "available" },
+        { id: 26, type: "common", course: "キャリアデザイン", title: "未来を創る働き方ガイド", author: "進路支援室", status: "available" },
+        { id: 27, type: "common", course: "身体運動理論", title: "健康とスポーツの科学", author: "体育学会", status: "available" },
+        { id: 28, type: "common", course: "統計学基礎", title: "文系のためのやさしい統計", author: "数理 学士", status: "available" },
+        { id: 29, type: "common", course: "経済学概論", title: "現代経済の仕組み", author: "マーケット 氏", status: "available" },
+        { id: 30, type: "common", course: "高知の自然", title: "四万十川の生態系と保全", author: "自然 博士", status: "available" },
+
+        // 資格課程 (オレンジ)
+        { id: 31, type: "license", course: "教育原理", title: "教育の理念と歴史", author: "教職 研", status: "available" },
+        { id: 32, type: "license", course: "発達心理学", title: "子どもの成長と心理", author: "発達 太郎", status: "available" },
+        { id: 33, type: "license", course: "図書館概論", title: "図書館の基礎知識", author: "日本図書館協会", status: "available" },
+        { id: 34, type: "license", course: "情報組織化演習", title: "目録作成の理論と実際", author: "司書 麗子", status: "rented" },
+        { id: 35, type: "license", course: "博物館概論", title: "キュレーターの仕事：展示と保存", author: "学芸員 Z", status: "available" },
+        { id: 36, type: "license", course: "日本語教授法", title: "日本語を教える：実践ガイド", author: "鈴木 幸子", status: "available" },
+        { id: 37, type: "license", course: "特別支援教育論", title: "個性を支える教育", author: "教育 支援", status: "available" },
+        { id: 38, type: "license", course: "司書教諭概論", title: "学校図書館の運営", author: "学校 司書", status: "available" },
+        { id: 39, type: "license", course: "日本語教育実習", title: "実習で学ぶ日本語教育", author: "日本語 班", status: "available" },
+        { id: 40, type: "license", course: "道徳教育論", title: "現代の道徳教育", author: "道徳 誠", status: "available" },
+
+        // その他（追加分）
+        { id: 41, type: "special", course: "西洋史", title: "中世ヨーロッパの社会", author: "欧州 太郎", status: "available" },
+        { id: 42, type: "special", course: "東洋史", title: "アジアの歴史と交流", author: "アジア 研究者", status: "available" },
+        { id: 43, type: "special", course: "広告論", title: "刺さるコピーの作り方", author: "クリエイター", status: "available" },
+        { id: 44, type: "common", course: "生物学", title: "生命の多様性", author: "自然 博士", status: "available" },
+        { id: 45, type: "common", course: "法学入門", title: "身近な法律相談", author: "高知 弁護士", status: "available" },
+        { id: 46, type: "special", course: "身体表現論", title: "ダンスと身体の文化学", author: "振付師", status: "available" },
+        { id: 47, type: "special", course: "メディア表現", title: "動画編集の教科書", author: "クリエイター", status: "available" },
+        { id: 48, type: "special", course: "ジェンダー論", title: "社会と性：平等への歩み", author: "平等 美咲", status: "available" },
+        { id: 49, type: "common", course: "フランス語I", title: "初級フランス語", author: "Paris 太郎", status: "available" },
+        { id: 50, type: "special", course: "文化遺産学", title: "世界遺産と地域社会", author: "ユネスコ 太郎", status: "available" }
     ];
 
-    const locations = [
-        "永国寺キャンパス図書館前",
-        "1階 学生ラウンジ",
-        "体育館入り口付近",
-        "正面玄関ベンチ",
-        "カフェテリア「エヴァンス」前"
-    ];
-
+    let currentCategory = 'all';
     const bookGrid = document.getElementById('bookGrid');
     const searchInput = document.getElementById('searchInput');
 
-    function renderBooks(filter = "") {
+    function renderBooks() {
+        const filterText = searchInput.value.toLowerCase();
         bookGrid.innerHTML = "";
-        const filteredBooks = books.filter(book => 
-            book.title.includes(filter) || book.course.includes(filter)
-        );
 
-        filteredBooks.forEach(book => {
+        const filtered = books.filter(book => {
+            const matchesCategory = (currentCategory === 'all' || book.type === currentCategory);
+            const matchesSearch = (
+                book.title.toLowerCase().includes(filterText) || 
+                book.course.toLowerCase().includes(filterText) ||
+                book.author.toLowerCase().includes(filterText)
+            );
+            return matchesCategory && matchesSearch;
+        });
+
+        filtered.forEach(book => {
             const isAvailable = book.status === "available";
             const card = document.createElement('div');
-            card.className = 'book-card';
+            card.className = `book-card ${book.type}`;
             
             card.innerHTML = `
-                <span class="course-tag">${book.course}</span>
+                <div class="tag-row">
+                    <span class="type-tag tag-${book.type}">${getTypeName(book.type)}</span>
+                    <span class="course-tag">${book.course}</span>
+                </div>
                 <h3>${book.title}</h3>
-                <p style="color: #777; font-size: 14px;">著者: ${book.author}</p>
+                <div class="author">著者: ${book.author}</div>
                 <div class="status-badge ${isAvailable ? 'status-available' : 'status-rented'}">
                     ${isAvailable ? '● 貸出可能' : '× レンタル中'}
                 </div>
                 
-                <div style="margin-top:15px;">
-                    <label style="font-size: 12px; color: #666;">受渡希望場所:</label>
-                    <select class="location-select" ${!isAvailable ? 'disabled' : ''}>
-                        ${locations.map(loc => `<option value="${loc}">${loc}</option>`).join('')}
-                    </select>
-                </div>
+                <select class="location-select" ${!isAvailable ? 'disabled' : ''}>
+                    ${locations.map(loc => `<option value="${loc}">${loc}</option>`).join('')}
+                </select>
 
                 <button class="rent-btn" 
-                        onclick="toggleRent(${book.id})" 
+                        onclick="toggleRent(${book.id}, this)" 
                         ${!isAvailable ? 'disabled' : ''}>
                     ${isAvailable ? 'レンタル予約する' : '返却待ち'}
                 </button>
@@ -203,23 +270,30 @@
         });
     }
 
-    function toggleRent(id) {
+    function getTypeName(type) {
+        if(type === 'special') return '専門課程';
+        if(type === 'common') return '共通教育';
+        return '資格課程';
+    }
+
+    function filterCategory(cat, btn) {
+        currentCategory = cat;
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        renderBooks();
+    }
+
+    function toggleRent(id, btn) {
         const book = books.find(b => b.id === id);
-        if (book.status === "available") {
-            const loc = event.target.previousElementSibling.querySelector('select').value;
-            if(confirm(`「${book.title}」を ${loc} で受け取りますか？`)) {
-                book.status = "rented";
-                renderBooks(searchInput.value);
-                alert("予約が完了しました！出品者と連絡を取り合ってください。");
-            }
+        const loc = btn.previousElementSibling.value;
+        if(confirm(`【予約確認】\n本：${book.title}\n受取場所：${loc}\n\n予約を確定しますか？`)) {
+            book.status = "rented";
+            renderBooks();
+            alert("予約しました。出品者とのマッチングをお待ちください。");
         }
     }
 
-    searchInput.addEventListener('input', (e) => {
-        renderBooks(e.target.value);
-    });
-
-    // 初期表示
+    searchInput.addEventListener('input', renderBooks);
     renderBooks();
 </script>
 
