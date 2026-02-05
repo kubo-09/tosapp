@@ -1,149 +1,227 @@
-
 <!DOCTYPE html>
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>教科書レンタル管理システム</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <title>高知県立大 文化学部 教科書シェア</title>
     <style>
-        .status-available { background-color: #def7ec; color: #03543f; }
-        .status-rented { background-color: #fde8e8; color: #9b1c1c; }
+        :root {
+            --primary-color: #2c5e4f; /* 県立大をイメージしたグリーン */
+            --accent-color: #e67e22;
+            --bg-color: #f4f7f6;
+        }
+
+        body {
+            font-family: "Helvetica Neue", Arial, "Hiragino Kaku Gothic ProN", "Hiragino Sans", Meiryo, sans-serif;
+            background-color: var(--bg-color);
+            margin: 0;
+            padding: 20px;
+            color: #333;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 3px solid var(--primary-color);
+            padding-bottom: 10px;
+        }
+
+        .search-container {
+            max-width: 600px;
+            margin: 0 auto 20px;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 25px;
+            font-size: 16px;
+            box-sizing: border-box;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        input[type="text"]:focus {
+            border-color: var(--primary-color);
+        }
+
+        .book-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .book-card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: transform 0.2s;
+        }
+
+        .book-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .course-tag {
+            font-size: 12px;
+            background: #eee;
+            padding: 2px 8px;
+            border-radius: 4px;
+            color: #666;
+        }
+
+        .status-badge {
+            display: inline-block;
+            margin-top: 10px;
+            padding: 5px 12px;
+            border-radius: 15px;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .status-available { background: #d4edda; color: #155724; }
+        .status-rented { background: #f8d7da; color: #721c24; }
+
+        .location-select {
+            margin-top: 15px;
+            width: 100%;
+            padding: 8px;
+            border-radius: 5px;
+        }
+
+        .rent-btn {
+            display: block;
+            width: 100%;
+            margin-top: 15px;
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            background: var(--primary-color);
+            color: white;
+            cursor: pointer;
+            font-weight: bold;
+            transition: opacity 0.3s;
+        }
+
+        .rent-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .rent-btn:hover:not(:disabled) {
+            opacity: 0.8;
+        }
     </style>
 </head>
-<body class="bg-gray-50 p-4 md:p-10">
+<body>
 
-    <div class="max-w-4xl mx-auto bg-white p-6 rounded-xl shadow-lg">
-        <h1 class="text-2xl font-bold mb-6 text-gray-800">📚 教科書レンタル管理</h1>
+<header>
+    <h1>永国寺キャンパス 教科書シェア</h1>
+    <p>文化学部生のためのレンタルマーケット</p>
+</header>
 
-        <div class="mb-6">
-            <input type="text" id="searchInput" placeholder="教科書名・著者で検索..." 
-                class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
-        </div>
+<div class="search-container">
+    <input type="text" id="searchInput" placeholder="本の商品名、著者、または教科名で検索...">
+</div>
 
-        <div class="overflow-x-auto">
-            <table class="w-full text-left border-collapse">
-                <thead>
-                    <tr class="border-b-2 border-gray-100 text-gray-600">
-                        <th class="p-3">タイトル</th>
-                        <th class="p-3">著者</th>
-                        <th class="p-3">ステータス</th>
-                        <th class="p-3">アクション</th>
-                    </tr>
-                </thead>
-                <tbody id="bookList">
-                    </tbody>
-            </table>
-        </div>
+<div class="book-grid" id="bookGrid">
     </div>
 
-    <div id="modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
-        <div class="bg-white p-6 rounded-lg max-w-sm w-full">
-            <h2 id="modalTitle" class="text-xl font-bold mb-4">予約シミュレーション</h2>
-            <p class="text-sm text-gray-600 mb-4">本日より14日間レンタルする場合のシミュレーションです。</p>
-            <div class="bg-blue-50 p-4 rounded-md mb-4">
-                <p class="text-sm">返却予定日: <span id="returnDate" class="font-bold"></span></p>
-            </div>
-            <div class="flex justify-end gap-2">
-                <button onclick="closeModal()" class="px-4 py-2 text-gray-500">キャンセル</button>
-                <button onclick="confirmRental()" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">確定する</button>
-            </div>
-        </div>
-    </div>
+<script>
+    // 文化学部の教科書データ例
+    const books = [
+        { id: 1, title: "文化人類学への招待", course: "文化人類学概論", author: "佐藤 健二", status: "available" },
+        { id: 2, title: "高知の歴史と風土", course: "地域文化論", author: "高橋 誠", status: "rented" },
+        { id: 3, title: "社会調査の基礎", course: "社会調査法", author: "田中 芳子", status: "available" },
+        { id: 4, title: "現代言語学入門", course: "言語コミュニケーション論", author: "Smith John", status: "available" },
+        { id: 5, title: "心理学：心の仕組み", course: "心理学概論", author: "中村 弘", status: "rented" },
+        { id: 6, title: "観光文化論講義", course: "観光文化論", author: "伊藤 恵", status: "available" },
+        { id: 7, title: "多文化共生社会の課題", course: "多文化共生論", author: "岡田 康志", status: "available" },
+        { id: 8, title: "メディアと現代社会", course: "情報メディア論", author: "佐々木 茂", status: "available" },
+        { id: 9, title: "日本文学史（近代編）", course: "日本文学概論", author: "小林 文代", status: "rented" },
+        { id: 10, title: "比較文化論入門", course: "比較文化論", author: "山田 太郎", status: "available" },
+        { id: 11, title: "フィールドワークの技法", course: "文化フィールドワーク演習", author: "中島 健", status: "available" },
+        { id: 12, title: "高知県の伝統産業", course: "土佐文化論", author: "高知 太郎", status: "available" },
+        { id: 13, title: "異文化コミュニケーション", course: "国際コミュニケーション論", author: "Miller Alice", status: "rented" },
+        { id: 14, title: "表象文化論講義", course: "表象文化概論", author: "藤原 徹", status: "available" },
+        { id: 15, title: "日本語教育学概論", course: "日本語教授法", author: "鈴木 幸子", status: "available" },
+        { id: 16, title: "哲学への道", course: "哲学概論", author: "カント 太郎", status: "available" },
+        { id: 17, title: "家族社会学の現在", course: "家族論", author: "山下 真紀", status: "rented" },
+        { id: 18, title: "デジタル・アーカイブ論", course: "文化情報論", author: "デジタル 博士", status: "available" },
+        { id: 19, title: "民俗学のまなざし", course: "日本民俗学", author: "柳田 浩", status: "available" },
+        { id: 20, title: "芸術文化のマネジメント", course: "文化政策論", author: "芸術 史郎", status: "available" }
+    ];
 
-    <script>
-        // サンプルデータ
-        const books = [
-    { id: 1, title: "文化人類学入門", author: "山下 恒一", subject: "文化人類学", status: "available" },
-    { id: 2, title: "現代文化論", author: "佐藤 真一", subject: "文化論", status: "rented" },
-    { id: 3, title: "比較文化研究", author: "高橋 恒一", subject: "文化研究", status: "available" },
+    const locations = [
+        "永国寺キャンパス図書館前",
+        "1階 学生ラウンジ",
+        "体育館入り口付近",
+        "正面玄関ベンチ",
+        "カフェテリア「エヴァンス」前"
+    ];
 
-    { id: 4, title: "日本文学史", author: "田村 恒一", subject: "文学", status: "available" },
-    { id: 5, title: "近代文学概論", author: "鈴木 花子", subject: "文学", status: "rented" },
-    { id: 6, title: "文学理論入門", author: "中村 恒一", subject: "文学理論", status: "available" },
+    const bookGrid = document.getElementById('bookGrid');
+    const searchInput = document.getElementById('searchInput');
 
-    { id: 7, title: "日本史概説", author: "佐々木 恒一", subject: "歴史学", status: "available" },
-    { id: 8, title: "世界史への招待", author: "松本 恒一", subject: "歴史学", status: "rented" },
-    { id: 9, title: "文化史研究", author: "伊藤 真", subject: "歴史学", status: "available" },
+    function renderBooks(filter = "") {
+        bookGrid.innerHTML = "";
+        const filteredBooks = books.filter(book => 
+            book.title.includes(filter) || book.course.includes(filter)
+        );
 
-    { id: 10, title: "哲学への問い", author: "小林 恒一", subject: "哲学", status: "available" },
-    { id: 11, title: "現代思想入門", author: "森田 恒一", subject: "哲学", status: "rented" },
+        filteredBooks.forEach(book => {
+            const isAvailable = book.status === "available";
+            const card = document.createElement('div');
+            card.className = 'book-card';
+            
+            card.innerHTML = `
+                <span class="course-tag">${book.course}</span>
+                <h3>${book.title}</h3>
+                <p style="color: #777; font-size: 14px;">著者: ${book.author}</p>
+                <div class="status-badge ${isAvailable ? 'status-available' : 'status-rented'}">
+                    ${isAvailable ? '● 貸出可能' : '× レンタル中'}
+                </div>
+                
+                <div style="margin-top:15px;">
+                    <label style="font-size: 12px; color: #666;">受渡希望場所:</label>
+                    <select class="location-select" ${!isAvailable ? 'disabled' : ''}>
+                        ${locations.map(loc => `<option value="${loc}">${loc}</option>`).join('')}
+                    </select>
+                </div>
 
-    { id: 12, title: "社会学入門", author: "山田 花子", subject: "社会学", status: "available" },
-    { id: 13, title: "メディア文化論", author: "山田 花子", subject: "メディア論", status: "available" },
-
-    { id: 14, title: "言語学概論", author: "佐藤 恒一", subject: "言語学", status: "available" },
-    { id: 15, title: "異文化コミュニケーション", author: "高木 恒一", subject: "言語・文化", status: "rented" }
-];
-
-        let selectedBookId = null;
-
-        // リスト描画
-        function renderBooks(filter = "") {
-            const list = document.getElementById('bookList');
-            list.innerHTML = "";
-
-            const filtered = books.filter(b => 
-                b.title.includes(filter) || b.author.includes(filter)
-            );
-
-            filtered.forEach(book => {
-                const isAvail = book.status === 'available';
-                const row = document.createElement('tr');
-                row.className = "border-b border-gray-50 hover:bg-gray-50 transition";
-                row.innerHTML = `
-                    <td class="p-3 font-medium">${book.title}</td>
-                    <td class="p-3 text-gray-600">${book.author}</td>
-                    <td class="p-3">
-                        <span class="px-2 py-1 rounded-full text-xs font-bold ${isAvail ? 'status-available' : 'status-rented'}">
-                            ${isAvail ? '● 貸し出し可能' : '■ レンタル中'}
-                        </span>
-                    </td>
-                    <td class="p-3">
-                        <button onclick="openModal(${book.id})" 
-                            ${!isAvail ? 'disabled' : ''}
-                            class="px-3 py-1 rounded text-sm transition ${isAvail ? 'bg-blue-100 text-blue-700 hover:bg-blue-200' : 'bg-gray-100 text-gray-400 cursor-not-allowed'}">
-                            予約する
-                        </button>
-                    </td>
-                `;
-                list.appendChild(row);
-            });
-        }
-
-        // 検索イベント
-        document.getElementById('searchInput').addEventListener('input', (e) => {
-            renderBooks(e.target.value);
+                <button class="rent-btn" 
+                        onclick="toggleRent(${book.id})" 
+                        ${!isAvailable ? 'disabled' : ''}>
+                    ${isAvailable ? 'レンタル予約する' : '返却待ち'}
+                </button>
+            `;
+            bookGrid.appendChild(card);
         });
+    }
 
-        // モーダル操作
-        function openModal(id) {
-            selectedBookId = id;
-            const book = books.find(b => b.id === id);
-            document.getElementById('modalTitle').innerText = `${book.title} の予約`;
-            
-            // 返却予定日の計算（14日後）
-            const date = new Date();
-            date.setDate(date.getDate() + 14);
-            document.getElementById('returnDate').innerText = date.toLocaleDateString('ja-JP');
-            
-            document.getElementById('modal').classList.remove('hidden');
+    function toggleRent(id) {
+        const book = books.find(b => b.id === id);
+        if (book.status === "available") {
+            const loc = event.target.previousElementSibling.querySelector('select').value;
+            if(confirm(`「${book.title}」を ${loc} で受け取りますか？`)) {
+                book.status = "rented";
+                renderBooks(searchInput.value);
+                alert("予約が完了しました！出品者と連絡を取り合ってください。");
+            }
         }
+    }
 
-        function closeModal() {
-            document.getElementById('modal').classList.add('hidden');
-        }
+    searchInput.addEventListener('input', (e) => {
+        renderBooks(e.target.value);
+    });
 
-        function confirmRental() {
-            const book = books.find(b => b.id === selectedBookId);
-            book.status = 'rented';
-            alert(`${book.title} の予約が完了しました。`);
-            closeModal();
-            renderBooks();
-        }
+    // 初期表示
+    renderBooks();
+</script>
 
-        // 初期化
-        renderBooks();
-    </script>
 </body>
 </html>
